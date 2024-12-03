@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Wand2, XIcon } from "lucide-react";
 import { getResponse } from "@/utils/getAI";
 import toast from "react-hot-toast";
+  
 
 const CreateSubjectModal = ({ isOpen, onClose, setSub }) => {
   const [title, setTitle] = useState("");
@@ -22,6 +23,7 @@ const CreateSubjectModal = ({ isOpen, onClose, setSub }) => {
   
     setTitle(""); // Reset the title to an empty string instead of null for controlled inputs
     setTopics(""); // Reset topics similarly
+    toast.success("Successfully created new Subject");
     onClose(); // Close the modal or dialog
   };
 
@@ -98,6 +100,7 @@ const CreateSubjectModal = ({ isOpen, onClose, setSub }) => {
           </div>
         </div>
       </div>
+
     </div>
   );
 };
