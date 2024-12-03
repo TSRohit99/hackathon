@@ -59,8 +59,7 @@ const Page = () => {
             <form onSubmit={formik.handleSubmit} className='flex flex-col items-center gap-3 p-1'>
                 <div className='flex flex-col gap-2'>
                     <h2 className={`text-2xl md:text-3xl text-slate-600 font-semibold`}>
-                        Welcome to The Task Manager
-                    </h2>
+                        Welcome to Interview Prep. System                    </h2>
                     <h4 className='text-0xl md:text-1xl text-slate-600 font-medium'>
                         Please enter your details to reset the password.
                     </h4>
