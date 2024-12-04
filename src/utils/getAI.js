@@ -3,7 +3,8 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 
 export const getResponse = async (prompt) => {
-  const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY; // Replace with your Gemini API Key
+
+  const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY; 
 
     try {
 
