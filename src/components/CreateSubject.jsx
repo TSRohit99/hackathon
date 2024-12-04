@@ -2,25 +2,31 @@ import React, { useState } from "react";
 import { Wand2, XIcon } from "lucide-react";
 import { getResponse } from "@/utils/getAI";
 import toast from "react-hot-toast";
-  
+import { getSuggestionsPrompt } from "@/utils/prompt";
+import { createData } from "@/utils/createRoadmapQuestions";
 
 const CreateSubjectModal = ({ isOpen, onClose, setSub }) => {
   const [title, setTitle] = useState("");
   const [topics, setTopics] = useState("");
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     console.log("Subject Created:", { title, topics });
-  
+    const res = await createData(title, topics);
+
+    if (res) {
+      toast.success("Successfully created the subject!");
+    }
+
+    //This needs to be changed
     setSub((prev) => [
       ...prev,
       {
-        id: prev.length ? prev.length + 2 : 10, // Ensure unique IDs, even if `prev` is initially empty
-        title: title || "Untitled", // Fallback for empty titles
+        id: prev.length ? prev.length + 1 : 10,
+        title: title || "Untitled",
         progress: 0,
       },
     ]);
-    
-  
+
     setTitle(""); // Reset the title to an empty string instead of null for controlled inputs
     setTopics(""); // Reset topics similarly
     toast.success("Successfully created new Subject");
@@ -29,7 +35,7 @@ const CreateSubjectModal = ({ isOpen, onClose, setSub }) => {
 
   const handleAI = async () => {
     const toastId = toast.loading("Generating the AI suggestion");
-    const prompt = `send me 5 interview based topics  on ${title}, make it to send the topics with comma separted and only topics no extra texts`;
+    const prompt = getSuggestionsPrompt(title);
     const res = await getResponse(prompt);
     if (res) {
       setTopics(res);
@@ -100,7 +106,6 @@ const CreateSubjectModal = ({ isOpen, onClose, setSub }) => {
           </div>
         </div>
       </div>
-
     </div>
   );
 };
