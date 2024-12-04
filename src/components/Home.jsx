@@ -1,11 +1,24 @@
-"use client"
-import React, { useState } from 'react';
-import { Trash2, Plus, Search } from 'lucide-react';
-import CreateSubjectModal from './CreateSubject';
+"use client";
+import React, { useState } from "react";
+import { Trash2, Plus, Search } from "lucide-react";
+import CreateSubjectModal from "./CreateSubject";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import toast from "react-hot-toast";
 
 const SubjectModal = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null); // Track ID to delete
   const [subjects, setSubjects] = useState([
     {
       id: 1,
@@ -33,17 +46,29 @@ const SubjectModal = () => {
 
   const handleModal = () => {
     setIsModalOpen(true);
-  }
+  };
 
   const handleDelete = (id) => {
-    setSubjects(subjects.filter(subject => subject.id !== id));
+    setIsAlertModalOpen(true);
+    setPendingDeleteId(id);
+  };
+
+  const confirmDelete = () => {
+    setSubjects((prev) =>
+      prev.filter((subject) => subject.id !== pendingDeleteId)
+    );
+    setPendingDeleteId(null);
+    toast.success("Successfully  deleted!");
+    setIsAlertModalOpen(false);
   };
 
   return (
-    <div className='bg-black/50 flex justify-center items-center min-h-screen p-4'>
+    <div className="bg-black/50 flex justify-center items-center min-h-screen p-4">
       <div className="w-full md:w-1/2 lg:w-3/4 xl:w-1/2 bg-white shadow-lg rounded-lg p-4 sm:p-6 max-h-96 overflow-y-scroll">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-4">
-          <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mb-4 sm:mb-0">Subjects</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mb-4 sm:mb-0">
+            Subjects
+          </h2>
           <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
             <div className="relative w-full sm:w-auto">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" size={20} />
@@ -94,8 +119,7 @@ const SubjectModal = () => {
                   </button>
                 </div>
               </div>
-            ))
-          }
+            ))}
         </div>
       </div>
       <CreateSubjectModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} setSub={setSubjects} />
