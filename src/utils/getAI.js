@@ -3,6 +3,10 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 
 export const getResponse = async (prompt) => {
+<<<<<<< HEAD
+=======
+
+>>>>>>> 1f48907baf709aeee264805a0cb2d90a68fdf1ed
   const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY; 
 
     try {
