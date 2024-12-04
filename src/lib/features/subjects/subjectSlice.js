@@ -1,0 +1,62 @@
+"use client"
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+
+const initialState = {
+    subjects: [],
+    loading: false,
+    isFetched: false,
+    error: null,
+    isButtonLoading: false,
+};
+
+// * Create an async thunk to fetch todos
+export const fetchSubjects = createAsyncThunk(
+    'subjects/fetchSubjects',
+    async () => {
+        const response = {
+            // subjects: await GetSubjects(),
+            subjects: []
+        };
+        return response;
+    }
+);
+
+export const subjectSlice = createSlice({
+    name: "subjectSlice",
+    initialState,
+    reducers: {
+
+        toggleButtonLoading: (state, action) => {
+            state.isButtonLoading = action.payload;
+        },
+
+        addSubject: (state, action) => {
+            state.subjects = [...state.subjects, action.payload];
+        },
+
+        deleteSubject: (state, action) => {
+            state.subjects = state.subjects.filter((subject) => subject._id !== action.payload)
+        }
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchSubjects.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(fetchSubjects.fulfilled, (state, action) => {
+                state.loading = false;
+                state.error = null;
+                state.todos = action.payload.todos;
+                state.isFetched = true;
+            })
+            .addCase(fetchSubjects.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message;
+                state.isFetched = false;
+            });
+    },
+});
+
+export const { toggleButtonLoading, addSubject, deleteSubject } = subjectSlice.actions;
+
+export default subjectSlice.reducer;
