@@ -24,8 +24,11 @@ const SubjectModal = () => {
     { id: 2, title: "JAVA", progress: 65 },
     { id: 3, title: "C++", progress: 75 },
     { id: 4, title: "Python", progress: 75 },
+    { id: 5, title: "economics", progress: 75 },
   ]);
-
+  const demofun =()=>{
+    return "testing conflict"
+  }
   const handleModal = () => {
     setIsModalOpen(true);
   };
