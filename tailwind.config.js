@@ -14,6 +14,9 @@ module.exports = {
 				}
 				,
 				tomato_1: '#FFA270',
+				EEEEEE : '#EEEEEE',
+				DCE4C9: '#DCE4C9',
+				F5F5DC: '#F5F5DC'
 			},
 			keyframes: {
 				'accordion-down': {
