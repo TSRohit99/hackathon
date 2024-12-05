@@ -1,18 +1,9 @@
 "use client";
 import React, { useState } from "react";
-import { Trash2, Plus, Search } from "lucide-react";
+import { Trash2, Plus, Search, PlayCircle, RefreshCw } from "lucide-react";
 import CreateSubjectModal from "./CreateSubject";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import toast from "react-hot-toast";
+import Alert from "../hooks/Alert";
 
 const SubjectModal = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,13 +14,16 @@ const SubjectModal = () => {
     { id: 1, title: "Mathematics", progress: 20 },
     { id: 3, title: "Java", progress: 75 },
     { id: 4, title: "Python", progress: 75 },
-    { id: 5, title: "economics", progress: 75 },
+    { id: 5, title: "economics", progress: 0 },
   ]);
-  const demofun = () => {
-    return "testing conflict";
-  };
+
   const handleModal = () => {
     setIsModalOpen(true);
+  };
+
+  const handleLesson = (subId) => {
+    console.log(subId)
+    //redirect to the sub link from here here
   };
   //hi there
   const handleDelete = (id) => {
@@ -92,15 +86,33 @@ const SubjectModal = () => {
                   {subject.title}
                 </span>
                 <div className="flex items-center space-x-4">
+                  {subject.progress === 0 ? (
+                    <button
+                      onClick={() => handleLesson(subject.id)}
+                      className="flex items-center bg-green-500 text-white px-3 py-1 rounded-full hover:bg-green-600 transition-colors"
+                    >
+                      <PlayCircle className="mr-2" size={18} /> Start Lesson
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleLesson(subject.id)}
+                      className="flex items-center bg-blue-500 text-white px-3 py-1 rounded-full hover:bg-blue-600 transition-colors"
+                    >
+                      <RefreshCw className="mr-2" size={18} /> Continue Lesson
+                    </button>
+                  )}
+
                   <div className="w-32 bg-gray-200 rounded-full h-2.5">
                     <div
                       className="bg-blue-600 h-2.5 rounded-full"
                       style={{ width: `${subject.progress}%` }}
                     ></div>
                   </div>
+
                   <span className="text-sm text-gray-600">
                     {subject.progress}%
                   </span>
+
                   <button
                     onClick={() => handleDelete(subject.id)}
                     className="text-red-500 hover:text-red-700 transition-colors"
@@ -113,31 +125,11 @@ const SubjectModal = () => {
         </div>
       </div>
 
-      <AlertDialog open={isAlertModalOpen} onOpenChange={setIsAlertModalOpen}>
-        <AlertDialogContent className="bg-white p-6 rounded-lg shadow-lg">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              subject and remove your data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => setIsAlertModalOpen(false)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-colors"
-            >
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Alert
+        isAlertModalOpen={isAlertModalOpen}
+        setIsAlertModalOpen={setIsAlertModalOpen}
+        confirmDelete={confirmDelete}
+      />
 
       <CreateSubjectModal
         isOpen={isModalOpen}
