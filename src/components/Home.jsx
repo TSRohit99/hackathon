@@ -21,18 +21,17 @@ const SubjectModal = () => {
   const [pendingDeleteId, setPendingDeleteId] = useState(null); // Track ID to delete
   const [subjects, setSubjects] = useState([
     { id: 1, title: "Mathematics", progress: 20 },
-    { id: 2, title: "JAVA", progress: 65 },
-    { id: 3, title: "C++", progress: 75 },
+    { id: 3, title: "Java", progress: 75 },
     { id: 4, title: "Python", progress: 75 },
     { id: 5, title: "economics", progress: 75 },
   ]);
-  const demofun =()=>{
-    return "testing conflict"
-  }
+  const demofun = () => {
+    return "testing conflict";
+  };
   const handleModal = () => {
     setIsModalOpen(true);
   };
-  //hi there 
+  //hi there
   const handleDelete = (id) => {
     setIsAlertModalOpen(true);
     setPendingDeleteId(id);
