@@ -18,7 +18,7 @@ export const GET = async (request) => {
 
         const userSubjects = await subjectModel.find({ user_id: user._id });
         return NextResponse.json(userSubjects);
-        
+
     } catch (error) {
         console.error('Error in GET /subjects:', error);
         return NextResponse.json({ message: 'Failed to fetch subjects.', error: error.message }, { status: 500 });
@@ -53,3 +53,27 @@ export const POST = async (request) => {
         return NextResponse.json({ message: error.message }, { status: 500 });
     }
 };
+
+
+export const DELETE = async (request) => {
+    try {
+        await connectDB();
+        const url = new URL(request.url);
+        const _id = url.searchParams.get("_id");
+
+        if (!_id) {
+            throw new Error("Subject ID is required");
+        }
+
+        const deletedSubject = await subjectModel.findByIdAndDelete({ _id: _id });
+        if (!deletedSubject) {
+            return NextResponse.json({ message: 'Subject not found or unauthorized!' }, { status: 404 });
+        }
+
+        return NextResponse.json(_id);
+
+    } catch (error) {
+        console.log(error);
+        return NextResponse.json({ message: error.message }, { status: 500 });
+    }
+}

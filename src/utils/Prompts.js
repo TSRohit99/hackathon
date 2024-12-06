@@ -103,7 +103,7 @@ const PromptGenerateRoadmap = (title, topics) => {
 };
 
 const PromptGenerateDescription = (topic, heading) => {
-    return `give me a string of indepth description for ${heading} of it's ${topic} topic.`;
+    return `Provide a detailed description for the topic "${heading}" under the subject "${topic}". Return the response as a well-structured HTML string, including appropriate tags such as <h1>, <p>, <ul>, <li>, or any other necessary tags to format the content effectively. Ensure proper indentation and semantic structure.`;
 };
 
 const PromptGenerateQuestions = (heading, topics) => {
@@ -184,7 +184,7 @@ export const generateIndepth = async (roadmapObj) => {
                         if (!description) {
                             throw new Error(`Failed to get valid description for ${list.name}`);
                         }
-                        return { ...list, indepth: description };
+                        return { ...list, indepth: description};
                     };
 
                     try {

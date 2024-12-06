@@ -1,17 +1,21 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import { Trash2, Plus, Search, PlayCircle, RefreshCw } from "lucide-react";
 import CreateSubjectModal from "./CreateSubject";
 import toast from "react-hot-toast";
 import Alert from "../hooks/Alert";
-import { useAppSelector } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
+import { DeleteSubject } from "@/utils/deleteSubject";
+import { deleteSubject } from "@/lib/features/subjects/subjectSlice";
 
 const SubjectModal = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null); // Track ID to delete
+  const dispatch = useAppDispatch();
 
   const router = useRouter();
 
@@ -35,18 +39,16 @@ const SubjectModal = () => {
   const handleLesson = (_id) => {
     router.push(`/lesson/${_id}`);
   };
-  //hi there
+
   const handleDelete = (id) => {
     setIsAlertModalOpen(true);
     setPendingDeleteId(id);
   };
 
-  const confirmDelete = () => {
-    setSubjects((prev) =>
-      prev.filter((subject) => subject.id !== pendingDeleteId)
-    );
+  const confirmDelete = async() => {
+    const deleted_id = await DeleteSubject(pendingDeleteId);
+    dispatch(deleteSubject(deleted_id));
     setPendingDeleteId(null);
-    toast.success("Successfully  deleted!");
     setIsAlertModalOpen(false);
   };
 

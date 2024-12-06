@@ -1,77 +1,127 @@
 "use client";
 
-import { useSelector, useDispatch } from "react-redux";
+import DOMPurify from "dompurify";
+import { useEffect, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation } from "swiper";
 import "swiper/css";
-import "swiper/css/navigation";
+import extractHtml from "@/helper/extractHtml";
+import { useAppDispatch } from "@/lib/hooks";
+import { setPage } from "@/lib/features/subjects/subjectSlice";
+import { useRouter } from "next/navigation";
 
-const LessonSlider = () => {
-  //   const dispatch = useDispatch();
+const LessonSlider = ({ subject }) => {
+  const swiperRef = useRef(null);
+  const dispatch = useAppDispatch();
+  const [isBeginning, setIsBeginning] = useState(true);
+  const [isEnd, setIsEnd] = useState(false);
+  const [currentPage, setCurrPage] = useState(null);
+  const router = useRouter();
 
-  // Retrieve the current slide from Redux
-  //   const currentSlide = useSelector((state) => state.slider.currentSlide);
-  const [currentSlide, setCurrentSlide] = useState(1);
+  const [CurrLesson, setCurrLesson] = useState(null);
 
-  const handleSlideChange = (swiper) => {
-    const newSlideIndex = swiper.activeIndex + 1;
-    setCurrentSlide(swiper.activeIndex + 1);
+  useEffect(() => {
+    if (
+      subject &&
+      subject.page_history &&
+      subject.page_history.lesson != null &&
+      subject.page_history.page != null &&
+      subject.roadmap[subject.page_history.lesson]
+    ) {
+      console.log(subject.roadmap[subject.page_history.lesson]);
+      console.log(subject.page_history.page);
+      setCurrLesson(subject.roadmap[subject.page_history.lesson]);
+      setCurrPage(subject.page_history.page + 1);
+    }
+  }, [subject, subject?.page_history?.lesson, subject?.page_history?.page, subject?.roadmap]);
 
-    // Dispatch the updated slide number to Redux
-    // dispatch({ type: "SET_CURRENT_SLIDE", payload: newSlideIndex });
+  useEffect(() => {
+    if (swiperRef.current) {
+      updateNavigationState(swiperRef.current);
+    }
+  }, [CurrLesson]);
+
+  const updateNavigationState = (swiper) => {
+    if (!swiper.slides || swiper.slides.length === 0) return;
+
+    setIsBeginning(swiper.isBeginning);
+    setIsEnd(swiper.isEnd);
+    setCurrPage(swiper.activeIndex + 1);
+    dispatch(setPage({
+      _id: subject._id,
+      page_history: {
+        page: swiper.activeIndex,
+        lesson: subject.page_history.lesson
+      }
+    }));
   };
 
-  return (
-    <section>
-      {/* swiper section */}
-      <div className="relative w-full max-w-4xl mx-auto">
-        {/* Swiper Component */}
-        <Swiper
-          modules={[Navigation]}
-          initialSlide={currentSlide - 1} // Start from the Redux slide index
-          onSlideChange={handleSlideChange}
-          navigation={{
-            nextEl: ".swiper-button-next",
-            prevEl: ".swiper-button-prev",
-          }}
-          loop={true}
-          onSwiper={(swiper) => swiper.navigation.init()}
-          className="relative w-full"
-        >
-          {/* Slides */}
-          <SwiperSlide className="flex items-center justify-center bg-blue-500 h-64">
-            Slide 1
-          </SwiperSlide>
-          <SwiperSlide className="flex items-center justify-center bg-green-500 h-64">
-            Slide 2
-          </SwiperSlide>
-          <SwiperSlide className="flex items-center justify-center bg-red-500 h-64">
-            Slide 3
-          </SwiperSlide>
-        </Swiper>
+  const goToPreviousLesson = () => {
+    if (subject.page_history.lesson > 0) {
+      const previousLesson = subject.roadmap[subject.page_history.lesson - 1];
+      setCurrLesson(previousLesson);
+      setCurrPage(1);
+      dispatch(setPage({ _id: subject._id, page_history: { page: 0, lesson: previousLesson } }));
+    }
+  };
 
-        {/* Navigation Buttons */}
-        <button
-          className="swiper-button-prev absolute top-1/2 left-0 transform -translate-y-1/2 bg-gray-800 text-white px-4 py-2 rounded-full"
-          aria-label="Previous Slide"
-        >
-          Prev
-        </button>
-        <button
-          className="swiper-button-next absolute top-1/2 right-0 transform -translate-y-1/2 bg-gray-800 text-white px-4 py-2 rounded-full"
-          aria-label="Next Slide"
-        >
-          Next
-        </button>
+
+  return (
+    <section className="flex flex-col justify-center items-center gap-2 p-3">
+      <div className="w-full text-center">
+        <h2 className="text-cyan-600 text-2xl font-medium">Lesson - {subject.page_history.lesson + 1}</h2>
+        <h3 className="text-cyan-600 text-xl font-medium">{CurrLesson ? CurrLesson.heading : ''} - {CurrLesson ? CurrLesson.subhead : ''}</h3>
+      </div>
+      <div className="relative w-full">
+        {/* Swiper Slider */}
+        {CurrLesson && CurrLesson.list && CurrLesson.list.length > 0 && (
+          <Swiper
+            onSwiper={(swiper) => {
+              swiperRef.current = swiper;
+              updateNavigationState(swiper); // Initialize state
+            }}
+            onSlideChange={(swiper) => updateNavigationState(swiper)}
+            spaceBetween={30}
+            slidesPerView={1}
+            loop={false}
+          >
+            {CurrLesson.list.map((topic, index) => (
+              <SwiperSlide key={index}>
+                <div className="w-full">
+                  <span className="text-cyan-800 text-xl font-medium">{topic.name}</span>
+                  <div dangerouslySetInnerHTML={{ __html: extractHtml(topic.indepth) }} className="html-container text-slate-800 font-medium" />
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        )}
 
         {/* Current Slide Indicator */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-full">
-          Slide {currentSlide}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-sky-800 px-4 py-2 rounded-full z-10">
+          {currentPage}
         </div>
-      </div>
 
-      {/* pagination */}
-      
+        {/* Give Test Button (Only visible on last slide) */}
+        {CurrLesson && isEnd && (
+          <button
+            onClick={() => {
+              router.push(`/lesson-test/${subject._id}/${subject.page_history.lesson}`)
+            }}
+            className="absolute bottom-5 right-5 bg-blue-900 text-white font-semibold px-6 py-3 rounded-full flex items-center justify-center hover:bg-blue-500 transition z-10"
+          >
+            Give Test
+          </button>
+
+        )}
+        {/* Previous Lesson Button (Only visible if not the first lesson) */}
+        {CurrLesson && subject.page_history.lesson > 0 && (
+          <button
+            onClick={goToPreviousLesson}
+            className="absolute bottom-5 left-5 bg-blue-900 text-white font-semibold px-6 py-3 rounded-full flex items-center justify-center hover:bg-blue-500 transition z-10"
+          >
+            Previous Lesson
+          </button>
+        )}
+      </div>
     </section>
   );
 };

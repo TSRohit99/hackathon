@@ -36,6 +36,10 @@ export const subjectSlice = createSlice({
 
         deleteSubject: (state, action) => {
             state.subjects = state.subjects.filter((subject) => subject._id !== action.payload)
+        },
+
+        setPage: (state, action) => {
+            state.subjects = state.subjects.map((item) => item._id === action.payload._id ? { ...item, page_history: action.payload.page_history } : item);
         }
     },
     extraReducers: (builder) => {
@@ -57,6 +61,6 @@ export const subjectSlice = createSlice({
     },
 });
 
-export const { toggleButtonLoading, addSubject, deleteSubject } = subjectSlice.actions;
+export const { toggleButtonLoading, addSubject, deleteSubject, setPage } = subjectSlice.actions;
 
 export default subjectSlice.reducer;
