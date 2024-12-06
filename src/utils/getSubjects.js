@@ -4,7 +4,7 @@ const { showToastWithCloseButton } = require("@/hooks/showToast");
 
 const GetSubjects = async () => {
     try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_DOMAIN}/api/subjects`);
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_DOMAIN}/api/subjects`, { withCredentials: true });
         return res.data;
     } catch (error) {
         console.log(error);

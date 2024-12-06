@@ -24,7 +24,7 @@ export const POST = async (request) => {
 
         // Create token payload
         const tokenPayload = {
-            id: user._id,
+            _id: user._id,
             email: user.email,
         };
 

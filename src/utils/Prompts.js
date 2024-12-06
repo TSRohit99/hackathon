@@ -1,4 +1,5 @@
 
+import { stringToJsonObj } from '@/helper/jsonObjConverter';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import pLimit from 'p-limit';
 
@@ -35,11 +36,11 @@ const fetchWithRetry = async (model, prompt, retries = 3, delay = 1000) => {
 }
 
 
-const PromptGenerateRoadmap = (title) => {
-    return `
-    Generate a detailed roadmap for ${title}. Structure it into:
-    1. Main headings ( it depends on the topic).
-    2. Subheadings for each heading ( Again it depends on topic).
+const PromptGenerateRoadmap = (title, topics) => {
+    return ` I want to learn ${title}.
+    Generate a detailed roadmap for ${title} with the topics : ${topics}. Structure it into:
+    1. headings ( name of the different topics ).
+    2. Subheadings for each heading ( Again it depends on topic heading).
     3. A list of topics under each subheading with an in-depth explanation for each topic.
     Format the roadmap as a JSON string, where each heading has:
     - A 'heading' field (string).
@@ -48,31 +49,22 @@ const PromptGenerateRoadmap = (title) => {
 
     The returned value always should be in object form.
     Example of returned data:
-  "roadmap": [
-    {
-      "heading": "Fundamentals of JavaScript",
-      "subhead": "Basics of JavaScript",
-      "list": [
-        {
-          "name": "Variables and Data Types",
-        },
-        {
-          "name": "Functions",
-        }
-      ]
-    },
-    {
-      "heading": "Intermediate JavaScript",
-      "subhead": "Advanced Features of ES6",
-      "list": [
-        {
-          "name": "Promises and Async/Await",
-        },
-        {
-          "name": "Destructuring and Spread Syntax",
-        }
-      ]
-    }
+    "roadmap": [
+  {  
+      "title": "[Provided Title]",  
+      "roadmap": [  
+        {  
+          "heading": "[Provided Heading]",  
+          "sub-heading": "[Generated Sub-Heading]",  
+          "list": [  
+            {  
+              "name": "[Concept Name]",  
+            }  
+          ],
+          "reference_link": "[URL Link]"  
+        }  
+      ]  
+    }  
   ]
 
 
@@ -91,6 +83,11 @@ const PromptGenerateRoadmap = (title) => {
                     required: [true, "Sub-heading is required"],
                     trim: true,
                 },
+                 reference_link: {
+                    type: String,
+                    required: [true, "Reference link is required"],
+                    trim: true,
+                },
                 list: [
                     {
                         name: {
@@ -105,45 +102,38 @@ const PromptGenerateRoadmap = (title) => {
             `
 };
 
-const PromptGenerateDescription = (title) => {
-    return `give me a string of indepth description for ${title}`;
+const PromptGenerateDescription = (topic, heading) => {
+    return `give me a string of indepth description for ${heading} of it's ${topic} topic.`;
 };
 
-const PromptGenerateQuestions = (title) => {
+const PromptGenerateQuestions = (heading, topics) => {
     return `
-        Generate 10 multiple-choice questions for the topic " ${title} ". Each question should have:
-- 'Question no' (numeric index starting from 1).
-- 'Question' (the text of the question).
-- 'Options' (an object with four options: 'a', 'b', 'c', 'd').
-- 'Correct_Ans' (the correct option as a single character: 'a', 'b', 'c', or 'd').
-- 'Given_Ans' (leave empty).
-- 'Dificulty_Level' (one of: Easy, Medium, Hard).
-Format your response as an array of objects, where each object follows this schema.
+    Generate 10 multiple-choice questions for the " ${heading} " and it's topics are : ${topics}. The question should relevant with the topics. Each question should have:
+    - 'Question no' (numeric index starting from 1).
+    - 'Question' (the text of the question).
+    - 'Options' (an object with four options: 'a', 'b', 'c', 'd').
+    - 'Correct_Ans' (the correct option as a single character: 'a', 'b', 'c', or 'd').
+    - 'Given_Ans' (leave empty).
+    - 'Dificulty_Level' (one of: Easy, Medium, Hard).
+    Format your response as string of json of an array of objects, where each object follows this schema.
     `;
 };
 
 
-
-export const generateRoadmap = async (title) => {
+export const generateRoadmap = async (title, topics) => {
     try {
+        console.log(`Title: ${title} and Topic: ${topics}`);
         const GEMINI_API_KEY = getNextAPIKey();
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        let res = await fetchWithRetry(model, PromptGenerateRoadmap(title)); // Use retry function
-        const cleanedString = res.response.candidates[0].content.parts[0].text
-            .replace(/^```json\s*/, "")
-            .replace("```", "")
-            .trim();
-
+        let res = await fetchWithRetry(model, PromptGenerateRoadmap(title, topics));
         let objectArray = {};
         try {
-            objectArray = JSON.parse(cleanedString);
+            objectArray = stringToJsonObj(res.response.candidates[0].content.parts[0].text);
         } catch (parseError) {
             console.error("Failed to parse the roadmap:", parseError);
         }
-
-        console.log(objectArray);
         return objectArray;
 
     } catch (err) {
@@ -151,6 +141,29 @@ export const generateRoadmap = async (title) => {
         return {};
     }
 };
+
+
+const retryOperation = async (operation, retries = 3, delay = 1000) => {
+    let attempt = 0;
+    let error;
+
+    while (attempt < retries) {
+        try {
+            return await operation(); // Try the operation
+        } catch (err) {
+            attempt++;
+            error = err;
+            console.error(`Attempt ${attempt} failed:`, err);
+            if (attempt < retries) {
+                console.log(`Retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay)); // Wait before retry
+            }
+        }
+    }
+
+    throw new Error(`Operation failed after ${retries} attempts: ${error.message}`);
+};
+
 
 export const generateIndepth = async (roadmapObj) => {
     try {
@@ -165,16 +178,20 @@ export const generateIndepth = async (roadmapObj) => {
                     const genAI = new GoogleGenerativeAI(apiKey);
                     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-                    try {
-                        const IndepthDescription = await fetchWithRetry(model, PromptGenerateDescription(list.name)); // Use retry function
+                    const operation = async () => {
+                        const IndepthDescription = await fetchWithRetry(model, PromptGenerateDescription(list.name, level.heading));
                         const description = IndepthDescription.response?.candidates?.[0]?.content?.parts?.[0]?.text || '';
                         if (!description) {
                             throw new Error(`Failed to get valid description for ${list.name}`);
                         }
                         return { ...list, indepth: description };
+                    };
+
+                    try {
+                        return await retryOperation(operation); // Retry if error occurs
                     } catch (error) {
                         console.error(`Error generating description for ${list?.name || 'Unknown list'}:`, error);
-                        return list;
+                        return list; // Return the list with no description if retry fails
                     }
                 })
             );
@@ -183,29 +200,35 @@ export const generateIndepth = async (roadmapObj) => {
 
             //* Generate questions for the heading
             const questionApiKey = getNextAPIKey();
-            const genAI = new GoogleGenerativeAI(questionApiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const genAIForQuestions = new GoogleGenerativeAI(questionApiKey);
+            const questionModel = genAIForQuestions.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-            try {
-                const questionResponse = await fetchWithRetry(model, PromptGenerateQuestions(level.heading)); // Use retry function
-                const questions = questionResponse.response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+            const operationForQuestions = async () => {
+                const HeadingTopics = level.list.map((item) => item.name).join(', ');
+                const questionResponse = await fetchWithRetry(questionModel, PromptGenerateQuestions(level.heading, HeadingTopics));
+                const questions = questionResponse.response?.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (!questions) {
                     throw new Error(`Failed to generate questions for ${level.heading}`);
                 }
-                const cleanedString = questions.replace(/^```json\s*/, "").replace("```", "").trim();
-                return { ...UpdatedRoadMap[index_1], list: updatedList, questions: JSON.parse(cleanedString) };
+                return stringToJsonObj(questions);
+            };
+
+            let questions = '';
+            try {
+                questions = await retryOperation(operationForQuestions); // Retry if error occurs
             } catch (error) {
                 console.error(`Error generating questions for ${level.heading}:`, error);
-                return { ...UpdatedRoadMap[index_1], list: updatedList, questions: [] };
+                questions = []; // Return empty questions array if retry fails
             }
+
+            return { ...UpdatedRoadMap[index_1], list: updatedList, questions };
         });
 
         UpdatedRoadMap = await Promise.all(indepthPromises);
-        console.log(UpdatedRoadMap);
         return UpdatedRoadMap;
 
     } catch (error) {
         console.error("Error generating in-depth descriptions:", error);
-        return [];
+        return []; // Return empty array if something fails globally
     }
 };

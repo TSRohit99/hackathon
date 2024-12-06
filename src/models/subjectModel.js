@@ -3,6 +3,19 @@ const mongoose = require('mongoose');
 const subjectSchema = new mongoose.Schema(
     {
         user_id: mongoose.Schema.ObjectId,
+        page_history: {
+            lesson: {
+                type: Number,
+                required: [true, "Lesson is required"],
+                default: 0,
+            },
+            page: {
+                type: Number,
+                required: [true, "Page is required"],
+                default: 0,
+            },
+        },
+
         title: {
             type: String,
             required: [true, "Title is required"],
