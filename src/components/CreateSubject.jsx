@@ -8,17 +8,19 @@ import { getSuggestionsPrompt } from "@/utils/prompt";
 import { createData } from "@/utils/createRoadmapQuestions";
 import { generateIndepth, generateRoadmap } from "@/utils/Prompts";
 import { PostSubject } from "@/utils/PostSubject";
+import { useAppDispatch } from "@/lib/hooks";
+import { addSubject } from "@/lib/features/subjects/subjectSlice";
 
-const CreateSubjectModal = ({ isOpen, onClose, setSub }) => {
+const CreateSubjectModal = ({ isOpen, onClose }) => {
   const [title, setTitle] = useState("");
   const [topics, setTopics] = useState("");
+  const dispatch = useAppDispatch();
 
   const handleCreate = async () => {
     if (!title || !topics) {
       toast.error("Title and topics are required to create a subject!");
       return;
     }
-
 
     try {
       console.log("Creating subject:", { title, topics });
@@ -48,18 +50,10 @@ const CreateSubjectModal = ({ isOpen, onClose, setSub }) => {
         await MakeFinalRoadMap();
       }
 
-      const insertedNewSubject = await PostSubject({ roadmap: finalRoadmap, title: title });
-      console.log(insertedNewSubject);
+      const NewSubject = await PostSubject({ roadmap: finalRoadmap, title: title });
 
-      // Proceed only after the finalRoadmap is generated
-      setSub((prev) => [
-        ...prev,
-        {
-          id: prev.length ? prev[prev.length - 1].id + 1 : 10, // Ensure unique IDs
-          title: title || "Untitled",
-          progress: 0,
-        },
-      ]);
+      // * Adding new subject into redux-store
+      dispatch(addSubject(NewSubject));
 
       toast.success("Successfully created the subject and roadmap!");
 

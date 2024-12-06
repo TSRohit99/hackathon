@@ -1,29 +1,39 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Trash2, Plus, Search, PlayCircle, RefreshCw } from "lucide-react";
 import CreateSubjectModal from "./CreateSubject";
 import toast from "react-hot-toast";
 import Alert from "../hooks/Alert";
+import { useAppSelector } from "@/lib/hooks";
+import { useRouter } from "next/navigation";
 
 const SubjectModal = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null); // Track ID to delete
-  const [subjects, setSubjects] = useState([
-    { id: 1, title: "Mathematics", progress: 20 },
-    { id: 3, title: "Java", progress: 75 },
-    { id: 4, title: "Python", progress: 75 },
-    { id: 5, title: "economics", progress: 0 },
-  ]);
+
+  const router = useRouter();
+
+  // const [subjects, setSubjects] = useState([
+  //   { id: 1, title: "Mathematics", progress: 20 },
+  //   { id: 3, title: "Java", progress: 75 },
+  //   { id: 4, title: "Python", progress: 75 },
+  //   { id: 5, title: "economics", progress: 0 },
+  // ]);
+
+  const { subjects } = useAppSelector(state => state.subjectStore);
+
+  useEffect(() => {
+    console.log('Home page renders...');
+  }, [subjects]);
 
   const handleModal = () => {
     setIsModalOpen(true);
   };
 
-  const handleLesson = (subId) => {
-    console.log(subId)
-    //redirect to the sub link from here here
+  const handleLesson = (_id) => {
+    router.push(`/lesson/${_id}`);
   };
   //hi there
   const handleDelete = (id) => {
@@ -79,7 +89,7 @@ const SubjectModal = () => {
             )
             .map((subject) => (
               <div
-                key={subject.id}
+                key={subject._id}
                 className="flex flex-col sm:flex-row items-center justify-between bg-blue-50 p-4 rounded-lg mb-2 hover:bg-blue-100 transition-colors"
               >
                 <span className="text-blue-800 font-semibold mb-2 sm:mb-0">
@@ -88,14 +98,14 @@ const SubjectModal = () => {
                 <div className="flex items-center space-x-4">
                   {subject.progress === 0 ? (
                     <button
-                      onClick={() => handleLesson(subject.id)}
+                      onClick={() => handleLesson(subject._id)}
                       className="flex items-center bg-green-500 text-white px-3 py-1 rounded-full hover:bg-green-600 transition-colors"
                     >
                       <PlayCircle className="mr-2" size={18} /> Start Lesson
                     </button>
                   ) : (
                     <button
-                      onClick={() => handleLesson(subject.id)}
+                      onClick={() => handleLesson(subject._id)}
                       className="flex items-center bg-blue-500 text-white px-3 py-1 rounded-full hover:bg-blue-600 transition-colors"
                     >
                       <RefreshCw className="mr-2" size={18} /> Continue Lesson
@@ -114,7 +124,7 @@ const SubjectModal = () => {
                   </span>
 
                   <button
-                    onClick={() => handleDelete(subject.id)}
+                    onClick={() => handleDelete(subject._id)}
                     className="text-red-500 hover:text-red-700 transition-colors"
                   >
                     <Trash2 size={20} />
@@ -134,7 +144,6 @@ const SubjectModal = () => {
       <CreateSubjectModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        setSub={setSubjects}
       />
     </div>
   );

@@ -8,11 +8,6 @@ export const GET = async (request) => {
         await connectDB();
 
         const token = request.cookies.get('token')?.value;
-        if (!token) {
-            console.warn('No token provided in the request.');
-            return NextResponse.json({ message: 'Token not provided!' }, { status: 401 });
-        }
-
         const user = await verifyToken(token);
         if (!user) {
             console.warn('Invalid or expired token:', token);
