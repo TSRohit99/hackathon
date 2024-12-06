@@ -81,7 +81,8 @@ export const getQuestionsPrompt = (title, topics) => {
 };
 
 export const getSuggestionsPrompt = (title) => {
-    const prompt = `send me 4 interview based topics  on ${title}, make it to send the topics with comma separted and only topics no extra texts`;
+    // const prompt = `send me 4 interview based topics  on ${title}, make it to send the topics with comma separted and only topics no extra texts`;
+    const prompt = `Give me top five interview based topics  on ${title}, make it to send the topics with comma separated and only topics no extra texts`;
 
     return prompt;
 }

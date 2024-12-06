@@ -1,46 +1,100 @@
+"use client"
+
 import React, { useState } from "react";
 import { Wand2, XIcon } from "lucide-react";
 import { getResponse } from "@/utils/getAI";
 import toast from "react-hot-toast";
 import { getSuggestionsPrompt } from "@/utils/prompt";
 import { createData } from "@/utils/createRoadmapQuestions";
+import { generateIndepth, generateRoadmap } from "@/utils/Prompts";
+import { PostSubject } from "@/utils/PostSubject";
 
 const CreateSubjectModal = ({ isOpen, onClose, setSub }) => {
   const [title, setTitle] = useState("");
   const [topics, setTopics] = useState("");
 
   const handleCreate = async () => {
-    console.log("Subject Created:", { title, topics });
-    const res = await createData(title, topics);
-
-    if (res) {
-      toast.success("Successfully created the subject!");
+    if (!title || !topics) {
+      toast.error("Title and topics are required to create a subject!");
+      return;
     }
 
-    //This needs to be changed
-    setSub((prev) => [
-      ...prev,
-      {
-        id: prev.length ? prev.length + 1 : 10,
-        title: title || "Untitled",
-        progress: 0,
-      },
-    ]);
 
-    setTitle(""); // Reset the title to an empty string instead of null for controlled inputs
-    setTopics(""); // Reset topics similarly
-    toast.success("Successfully created new Subject");
-    onClose(); // Close the modal or dialog
+    try {
+      console.log("Creating subject:", { title, topics });
+
+      // const res = await createData(title, topics);
+      // if (!res) throw new Error("Failed to create data.");
+      const loadingToast1 = toast.loading("Be patient. We are making the best roadmap for your journey.");
+
+      let initialRoadmap = null;
+      let finalRoadmap = null;
+
+      const MakeFinalRoadMap = async () => {
+        initialRoadmap = await generateRoadmap(title, topics);
+        console.log(initialRoadmap);
+
+        toast.dismiss(loadingToast1);
+
+        const loadingToast2 = toast.loading("We are writing an in-depth roadmap. This could take a couple of minutes.");
+        finalRoadmap = await generateIndepth(initialRoadmap);
+        console.log(finalRoadmap);
+
+        toast.dismiss(loadingToast2);
+      };
+
+      // Loop until finalRoadmap is not null or empty
+      while (!finalRoadmap || finalRoadmap.length === 0) {
+        await MakeFinalRoadMap();
+      }
+
+      const insertedNewSubject = await PostSubject({ roadmap: finalRoadmap, title: title });
+      console.log(insertedNewSubject);
+
+      // Proceed only after the finalRoadmap is generated
+      setSub((prev) => [
+        ...prev,
+        {
+          id: prev.length ? prev[prev.length - 1].id + 1 : 10, // Ensure unique IDs
+          title: title || "Untitled",
+          progress: 0,
+        },
+      ]);
+
+      toast.success("Successfully created the subject and roadmap!");
+
+      // Clear inputs and close
+      setTitle("");
+      setTopics("");
+      onClose();
+    } catch (error) {
+      toast.dismiss();
+      console.error(error);
+      toast.error("An error occurred while creating the subject. Please try again.");
+    }
   };
 
   const handleAI = async () => {
-    const toastId = toast.loading("Generating the AI suggestion");
-    const prompt = getSuggestionsPrompt(title);
-    const res = await getResponse(prompt);
-    if (res) {
-      setTopics(res);
-      toast.dismiss(toastId);
-      toast.success("Successfully fetched the suggestions");
+    if (!title) {
+      toast.error("Please enter a title to get AI suggestions.");
+      return;
+    }
+
+    const aiToastId = toast.loading("Generating AI suggestions...");
+    try {
+      const prompt = getSuggestionsPrompt(title);
+      const res = await getResponse(prompt);
+      if (res) {
+        setTopics(res);
+        toast.dismiss(aiToastId);
+        toast.success("Successfully fetched AI suggestions!");
+      } else {
+        throw new Error("Failed to fetch AI suggestions.");
+      }
+    } catch (error) {
+      toast.dismiss(aiToastId);
+      console.error(error);
+      toast.error("An error occurred while generating AI suggestions.");
     }
   };
 

@@ -1,4 +1,5 @@
 "use client"
+import GetSubjects from "@/utils/getSubjects";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 const initialState = {
@@ -14,8 +15,7 @@ export const fetchSubjects = createAsyncThunk(
     'subjects/fetchSubjects',
     async () => {
         const response = {
-            // subjects: await GetSubjects(),
-            subjects: []
+            subjects: await GetSubjects(),
         };
         return response;
     }
@@ -46,7 +46,7 @@ export const subjectSlice = createSlice({
             .addCase(fetchSubjects.fulfilled, (state, action) => {
                 state.loading = false;
                 state.error = null;
-                state.todos = action.payload.todos;
+                state.subjects = action.payload.subjects;
                 state.isFetched = true;
             })
             .addCase(fetchSubjects.rejected, (state, action) => {
